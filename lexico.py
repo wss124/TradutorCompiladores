@@ -13,6 +13,8 @@ SIMBOLOS = {
 def eh_letra(ch):
     return ("a" <= ch <= "z") or ("A" <= ch <= "Z")
 
+def eh_digito(ch):
+    return "0" <= ch <= "9"
 
 class Lexer:
     def __init__(self, fonte):
@@ -62,6 +64,18 @@ class Lexer:
             if lex in ("int", "float"):
                 return Token(Tipo.TYPE, lex, lin)
             return Token(Tipo.ID, lex, lin)
+
+        # num: inteiro (123) ou ponto flutuante (12.5)
+        if eh_digito(ch):
+            inicio = self.pos
+            while not self.fim() and eh_digito(self.atual()):
+                self.avancar()
+            if self.atual() == ".":
+                self.avancar()
+                while not self.fim() and eh_digito(self.atual()):
+                    self.avancar()
+            return Token(Tipo.NUM, self.fonte[inicio:self.pos], lin)
+
         
         if ch in SIMBOLOS:
             self.avancar()

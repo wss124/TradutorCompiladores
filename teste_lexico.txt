@@ -1,0 +1,6 @@
+Matexpr {
+    int a;
+    float b;
+    a + b * 2.5;
+    (a - 10) / b;
+}
