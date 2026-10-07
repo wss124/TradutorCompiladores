@@ -10,6 +10,9 @@ SIMBOLOS = {
     "*": Tipo.VEZES, "/": Tipo.DIV,
 }
 
+def eh_letra(ch):
+    return ("a" <= ch <= "z") or ("A" <= ch <= "Z")
+
 
 class Lexer:
     def __init__(self, fonte):
@@ -48,6 +51,17 @@ class Lexer:
 
         ch = self.atual()
 
+        # id, type ou Matexpr: apenas letras do alfabeto
+        if eh_letra(ch):
+            inicio = self.pos
+            while not self.fim() and eh_letra(self.atual()):
+                self.avancar()
+            lex = self.fonte[inicio:self.pos]
+            if lex == "Matexpr":
+                return Token(Tipo.MATEXPR, lex, lin)
+            if lex in ("int", "float"):
+                return Token(Tipo.TYPE, lex, lin)
+            return Token(Tipo.ID, lex, lin)
         
         if ch in SIMBOLOS:
             self.avancar()
