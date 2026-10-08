@@ -1,0 +1,16 @@
+/* Exemplo de entrada para o tradutor
+   infixo -> pos-fixo */
+Matexpr {
+    int a;
+    float b;
+    int c;
+
+    a + b * c;            // a b c * +
+    (a + b) * c;          // a b + c *
+    a - b - c;            // a b - c -
+    {
+        float x;
+        x / 2.5 + 10 * (a - 3);
+    }
+    100;
+}

@@ -39,13 +39,32 @@ class Lexer:
     def erro(self, msg):
         return ErroCompilacao(f"Erro lexico na linha {self.linha}: {msg}")
 
-    def ignorar_brancos(self):
-        """Ignora espacos, tabulacoes e saltos de linha."""
-        while not self.fim() and self.atual() in " \t\n\r":
-            self.avancar()
+    def ignorar_brancos_e_comentarios(self):
+        """Ignora espacos, tabulacoes, saltos de linha e comentarios estilo C."""
+        while not self.fim():
+            ch = self.atual()
+            if ch in " \t\n\r":
+                self.avancar()
+            elif ch == "/" and self.proximo() == "/":        
+                while not self.fim() and self.atual() != "\n":
+                    self.avancar()
+            elif ch == "/" and self.proximo() == "*":      
+                linha_inicio = self.linha
+                self.avancar()
+                self.avancar()
+                while True:
+                    if self.fim():
+                        raise self.erro(f"comentario aberto na linha {linha_inicio} nao foi fechado")
+                    if self.atual() == "*" and self.proximo() == "/":
+                        self.avancar()
+                        self.avancar()
+                        break
+                    self.avancar()
+            else:
+                return
 
     def proximo_token(self):
-        self.ignorar_brancos()
+        self.ignorar_brancos_e_comentarios()
         lin = self.linha
 
         if self.fim():
@@ -59,10 +78,12 @@ class Lexer:
             while not self.fim() and eh_letra(self.atual()):
                 self.avancar()
             lex = self.fonte[inicio:self.pos]
+            if eh_digito(self.atual()) or self.atual() == "_":
+               raise self.erro(f"identificador invalido iniciado por '{lex}' (use apenas letras)")
             if lex == "Matexpr":
                 return Token(Tipo.MATEXPR, lex, lin)
             if lex in ("int", "float"):
-                return Token(Tipo.TYPE, lex, lin)
+                return Token(Tipo.TYPE, lex, lin)   
             return Token(Tipo.ID, lex, lin)
 
         # num: inteiro (123) ou ponto flutuante (12.5)
@@ -72,8 +93,12 @@ class Lexer:
                 self.avancar()
             if self.atual() == ".":
                 self.avancar()
+                if not eh_digito(self.atual()):
+                    raise self.erro("numero mal formado: esperado digito apos o '.'")
                 while not self.fim() and eh_digito(self.atual()):
                     self.avancar()
+                if eh_letra(self.atual()):
+                    raise self.erro("numero mal formado: letra logo apos o numero")
             return Token(Tipo.NUM, self.fonte[inicio:self.pos], lin)
 
         

@@ -1,9 +1,4 @@
-"""
-Trabalho I - Compiladores 2026-2
-Tradutor de expressoes aritmeticas: notacao infixa -> pos-fixa
 
-Executar: python tradutor.py exemplo.txt
-"""
 
 import sys
 
