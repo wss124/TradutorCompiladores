@@ -7,6 +7,8 @@ class Parser:
     def __init__(self, lexer):
         self.lexer = lexer
         self.lookahead = lexer.proximo_token()
+        self.saida = []               
+        self.cont_expr = 0
 
     def erro(self, esperado, lin):
         return ErroCompilacao(
@@ -19,6 +21,14 @@ class Parser:
             self.lookahead = self.lexer.proximo_token()
         else:
             raise self.erro(t.value, self.lookahead.linha)
+    def emitir(self, s):
+        """Acao semantica: emite um simbolo na saida pos-fixa."""
+        self.saida.append(s)
+
+    def imprimir_expressao(self):
+        self.cont_expr += 1
+        print(f"Expressao {self.cont_expr}: {' '.join(self.saida)}")
+        self.saida.clear()    
 
     # program -> Matexpr block
     def program(self):
@@ -57,6 +67,7 @@ class Parser:
        else:
            self.expr()
            self.match(Tipo.PVIRG)
+           self.imprimir_expressao()
 
     # expr -> term restoE
     def expr(self):
@@ -66,9 +77,9 @@ class Parser:
     # restoE -> + term {print('+')} restoE | - term {print('-')} restoE | e
     def resto_e(self):
         if self.lookahead.tipo == Tipo.MAIS:
-            self.match(Tipo.MAIS); self.term(); self.resto_e()
+            self.match(Tipo.MAIS); self.term(); self.emitir("+"); self.resto_e()
         elif self.lookahead.tipo == Tipo.MENOS:
-            self.match(Tipo.MENOS); self.term(); self.resto_e()
+            self.match(Tipo.MENOS); self.term(); self.emitir("-"); self.resto_e()
 
     # term -> fact restoT
     def term(self):
@@ -78,9 +89,9 @@ class Parser:
     # restoT -> * fact {print('*')} restoT | / fact {print('/')} restoT | e
     def resto_t(self):
         if self.lookahead.tipo == Tipo.VEZES:
-            self.match(Tipo.VEZES); self.fact(); self.resto_t()
+            self.match(Tipo.VEZES); self.fact(); self.emitir("*"); self.resto_t()
         elif self.lookahead.tipo == Tipo.DIV:
-            self.match(Tipo.DIV); self.fact(); self.resto_t()
+            self.match(Tipo.DIV); self.fact(); self.emitir("/"); self.resto_t()
 
     # fact -> ( expr ) | num {print(num)} | id {print(id)}
     def fact(self):
@@ -89,6 +100,7 @@ class Parser:
             self.expr()
             self.match(Tipo.RPAREN)
         elif self.lookahead.tipo in (Tipo.NUM, Tipo.ID):
+            self.emitir(self.lookahead.lexema)
             self.match(self.lookahead.tipo)
         else:
             raise self.erro("'(', numero ou identificador", self.lookahead.linha)
