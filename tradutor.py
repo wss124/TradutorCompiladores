@@ -18,9 +18,8 @@ def main():
         sys.exit(1)
 
     try:
-        lx = Lexer(fonte)
-        while (t := lx.proximo_token()).tipo != Tipo.EOF:
-            print(t.linha, t.tipo.name, t.lexema)
+        Parser(Lexer(fonte)).program()
+        print("Traducao concluida sem erros.")
     except ErroCompilacao as e:
         print(e, file=sys.stderr)
         sys.exit(1)

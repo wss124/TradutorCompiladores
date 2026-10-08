@@ -30,4 +30,65 @@ class Parser:
     # block -> { decls stmts }
     def block(self):
         self.match(Tipo.LCHAVE)
+        self.decls()
+        self.stmts()
         self.match(Tipo.RCHAVE)
+         # decls -> decl decls | e
+    def decls(self):
+        if self.lookahead.tipo == Tipo.TYPE:
+            self.decl()
+            self.decls()
+        # senao: producao vazia
+
+    # decl -> type id ;
+    def decl(self):
+        self.match(Tipo.TYPE)
+        self.match(Tipo.ID)
+        self.match(Tipo.PVIRG)
+        # stmts -> stmt stmts | e      (FOLLOW(stmts) = { '}' })
+    def stmts(self):
+       if self.lookahead.tipo not in (Tipo.RCHAVE, Tipo.EOF):
+           self.stmt()
+           self.stmts()
+   # stmt -> block | expr ;
+    def stmt(self):
+       if self.lookahead.tipo == Tipo.LCHAVE:
+           self.block()
+       else:
+           self.expr()
+           self.match(Tipo.PVIRG)
+
+    # expr -> term restoE
+    def expr(self):
+        self.term()
+        self.resto_e()
+
+    # restoE -> + term {print('+')} restoE | - term {print('-')} restoE | e
+    def resto_e(self):
+        if self.lookahead.tipo == Tipo.MAIS:
+            self.match(Tipo.MAIS); self.term(); self.resto_e()
+        elif self.lookahead.tipo == Tipo.MENOS:
+            self.match(Tipo.MENOS); self.term(); self.resto_e()
+
+    # term -> fact restoT
+    def term(self):
+        self.fact()
+        self.resto_t()
+
+    # restoT -> * fact {print('*')} restoT | / fact {print('/')} restoT | e
+    def resto_t(self):
+        if self.lookahead.tipo == Tipo.VEZES:
+            self.match(Tipo.VEZES); self.fact(); self.resto_t()
+        elif self.lookahead.tipo == Tipo.DIV:
+            self.match(Tipo.DIV); self.fact(); self.resto_t()
+
+    # fact -> ( expr ) | num {print(num)} | id {print(id)}
+    def fact(self):
+        if self.lookahead.tipo == Tipo.LPAREN:
+            self.match(Tipo.LPAREN)
+            self.expr()
+            self.match(Tipo.RPAREN)
+        elif self.lookahead.tipo in (Tipo.NUM, Tipo.ID):
+            self.match(self.lookahead.tipo)
+        else:
+            raise self.erro("'(', numero ou identificador", self.lookahead.linha)
