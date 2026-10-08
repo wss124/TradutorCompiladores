@@ -7,6 +7,7 @@ class Parser:
     def __init__(self, lexer):
         self.lexer = lexer
         self.lookahead = lexer.proximo_token()
+        self.linha_anterior = 1         
         self.saida = []               
         self.cont_expr = 0
 
@@ -18,9 +19,12 @@ class Parser:
 
     def match(self, t):
         if self.lookahead.tipo == t:
+            self.linha_anterior = self.lookahead.linha
             self.lookahead = self.lexer.proximo_token()
         else:
-            raise self.erro(t.value, self.lookahead.linha)
+            
+            lin = self.linha_anterior if t in (Tipo.PVIRG, Tipo.RPAREN) else self.lookahead.linha
+            raise self.erro(t.value, lin)
     def emitir(self, s):
         """Acao semantica: emite um simbolo na saida pos-fixa."""
         self.saida.append(s)
@@ -64,6 +68,12 @@ class Parser:
     def stmt(self):
        if self.lookahead.tipo == Tipo.LCHAVE:
            self.block()
+       elif self.lookahead.tipo == Tipo.TYPE:
+             raise ErroCompilacao(
+                f"Erro sintatico na linha {self.lookahead.linha}: declaracao "
+                f"'{self.lookahead.lexema}' fora de lugar "
+                f"(declaracoes devem vir antes das expressoes do bloco)"
+            )
        else:
            self.expr()
            self.match(Tipo.PVIRG)
