@@ -1,9 +1,8 @@
-
-
 import sys
 
-from tokens import Tipo, ErroCompilacao
+from tokens import ErroCompilacao
 from lexico import Lexer
+from sintatico import Parser
 
 
 def main():
